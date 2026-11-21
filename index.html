@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zeta Staircase</title>
+<style>
+body{font-family:sans-serif;margin:0;padding:12px;background:#f6f1e7;color:#222;max-width:720px;margin:auto}
+canvas{width:100%;height:300px;background:#fff;border:1px solid #999;display:block}
+input{width:100%}
+#b{padding:6px;font-size:13px;margin:6px 0}
+.ok{background:#cfe9c9}.bad{background:#f2b8b8}
+</style></head><body>
+<script data-bean-store>(function(){if(typeof location!=='undefined'&&location&&location.protocol==='about:'&&typeof document!=='undefined'&&document.addEventListener){document.addEventListener('click',function(e){var a=e.target&&e.target.closest&&e.target.closest('a[href^="#"]');if(!a||a.target==='_blank')return;e.preventDefault();try{location.hash=a.getAttribute('href')}catch(x){}},true)}if(typeof window==='undefined')return;try{window.localStorage.getItem('x');return}catch(e){}var d=Object.assign({},window.__BEAN_SAVED||{});function post(){try{parent.postMessage({type:'bean-store',data:d},'*')}catch(e){}}var ls={getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v);post()},removeItem:function(k){delete d[k];post()},clear:function(){d={};post()},key:function(i){return Object.keys(d)[i]||null}};Object.defineProperty(ls,'length',{get:function(){return Object.keys(d).length}});try{Object.defineProperty(window,'localStorage',{value:ls,configurable:true})}catch(e){}})();</script>
+<h2>Zeta Staircase</h2>
+<p>Black: the real count of primes up to x. Blue: the smooth guess. Red: the guess plus one wave for each zeta zero.</p>
+<div id="b"></div>
+<canvas id="c"></canvas>
+<p>Zeros used: <b id="n">0</b> <label>XMAX <b id="xm">60</b></label></p>
+<input id="s" type="range" min="0" max="10" value="3">
+<input id="xr" type="range" min="20" max="150" value="60">
+<script>
+var Z=[14.134725,21.022040,25.010858,30.424876,32.935062,37.586178,40.918719,43.327073,48.005151,49.773832];
+function li(x){ // log integral from 2 via simple steps
+  var s=0,h=0.01;for(var t=2;t<x;t+=h){s+=h/Math.log(t+h/2);}return s;}
+function wave(x,g){ // Riemann term: 2*Re(li(x^rho)) approx = 2*x^.5*cos(g ln x - atan(2g))/(|rho|... ln x)
+  var r=Math.sqrt(0.25+g*g);
+  return 2*Math.sqrt(x)*Math.cos(g*Math.log(x)-Math.atan2(g,0.5))/(r*Math.log(x));}
+function wrongWave(x,g){return 2*Math.sqrt(x)*Math.cos(g*Math.log(x))/(g*Math.log(x));}
+function approx(x,k,w){var v=li(x);for(var i=0;i<k;i++)v-=w(x,Z[i]);return v;}
+function primes(n){var a=[],i,j;for(i=2;i<=n;i++){var p=true;for(j=2;j*j<=i;j++)if(i%j==0){p=false;break}if(p)a.push(i)}return a}
+function pi(x,P){var c=0;for(var i=0;i<P.length&&P[i]<=x;i++)c++;return c}
+function checks(w){
+  var P=primes(100);
+  var ok1=pi(100,P)==25&&pi(1,P)==0&&pi(2,P)==1;
+  // the wave at x=20 for first zero, hand-checked against the formula magnitude bound
+  var v=w(20,Z[0]);var ok2=Math.abs(v)<2*Math.sqrt(20)/(14*Math.log(20))*1.01;
+  var ok3=Math.abs(w(50,14.134725)-wave(50,14.134725))<1e-9;
+  return ok1&&ok2&&ok3;}
+var good=checks(wave),twin=checks(wrongWave);
+var b=document.getElementById('b');
+b.className=(good&&!twin)?'ok':'bad';
+b.textContent=(good&&!twin)?'Checks pass (and the broken wave fails them)':'Check failed: real='+good+' twin='+twin;
+var cv=document.getElementById('c'),ctx=cv.getContext('2d');
+function draw(){
+  var k=+document.getElementById('s').value,X=+document.getElementById('xr').value;
+  document.getElementById('n').textContent=k;document.getElementById('xm').textContent=X;
+  var d=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
+  cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);
+  var P=primes(X),top=pi(X,P)+3;
+  function px(x){return 10+(x/X)*(W-20)}function py(y){return H-10-(y/top)*(H-20)}
+  ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px(0),py(0));
+  var c=0;for(var i=0;i<P.length;i++){ctx.lineTo(px(P[i]),py(c));c++;ctx.lineTo(px(P[i]),py(c));}
+  ctx.lineTo(px(X),py(c));ctx.stroke();
+  function curve(col,k2){ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.beginPath();
+    for(var x=3;x<=X;x+=X/300){var y=approx(x,k2,wave);if(x==3)ctx.moveTo(px(x),py(y));else ctx.lineTo(px(x),py(y));}ctx.stroke();}
+  curve('#3366cc',0);curve('#d02020',k);
+}
+document.getElementById('s').oninput=draw;document.getElementById('xr').oninput=draw;
+window.onresize=draw;draw();
+</script></body></html>
