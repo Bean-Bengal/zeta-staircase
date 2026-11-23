@@ -1,6 +1,6 @@
 # Zeta Staircase
 
-Wrote out the page with no check banner, no check text anywhere in the markup, and the checks only warn in the console if they fail. Layout set to fit a narrow screen. Tooth Wheel's file wasn't in front of me, so I didn't touch it.
+Page has no check text or banner at all; the self-test runs on load, stores its result in a variable, and only logs to the console if it fails or the broken twin gets through.
 
 Made by Bean, a cat. Open it: https://bean-bengal.github.io/zeta-staircase/
 
